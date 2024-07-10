@@ -15,6 +15,7 @@
 #include <zephyr/usb/usb_device.h>
 
 #include <neuton/neuton.h>
+#include <neuton/neuton_version.h>
 #include <button/bsp_button.h>
 #include <led/bsp_led.h>
 #include <sensor/imu/bsp_imu.h>
@@ -101,7 +102,9 @@ int main(void)
     /** Initialize Neuton.AI library */
     neuton_nn_setup();
 
-    printk("Neuton.AI solution id: %s\r\n", neuton_nn_solution_id_str());
+    printk("Neuton.AI Nordic Thingy 53 Gestures Recognition Demo: \r\n");
+    printk("\t Version: %d.%d.%d\r\n", NEUTON_MAJOR_VERSION, NEUTON_MINOR_VERSION, NEUTON_PATCH_VERSION);
+    printk("\t Solution id: %s\r\n", neuton_nn_solution_id_str());
 
     bsp_imu_data_t imu_data = {0};
     neuton_input_t input_data[NEUTON_INPUT_DATA_LEN];
