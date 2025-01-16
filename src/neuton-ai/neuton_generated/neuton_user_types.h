@@ -1,4 +1,4 @@
-/* 2024-07-09T15:25:11Z */
+/* 2025-01-13T13:20:24Z */
 
 /* ----------------------------------------------------------------------
 Copyright (c) 2022-2023 Neuton.AI, Inc.
@@ -45,7 +45,7 @@ typedef neuton_u16_t neuton_coeff_t;
 typedef neuton_i64_t neuton_accum_t;
 typedef neuton_i16_t neuton_weight_t;
 typedef neuton_u8_t neuton_sources_num_t;
-typedef neuton_u8_t neuton_weights_num_t;
+typedef neuton_u16_t neuton_weights_num_t;
 typedef neuton_i32_t neuton_2x_q_t;
 typedef neuton_u8_t neuton_neurons_num_t;
 

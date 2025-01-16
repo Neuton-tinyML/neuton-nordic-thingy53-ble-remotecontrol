@@ -1,14 +1,13 @@
 #ifndef _NEUTON_TYPES_H_
 #define _NEUTON_TYPES_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <stdlib.h>
 
-#ifdef   __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /**
@@ -54,12 +53,12 @@ typedef uint64_t neuton_u64_t;
 /**
  * @brief 32-bit floating-point type definition.
  */
-typedef float   neuton_f32_t;
+typedef float neuton_f32_t;
 
 /**
  * @brief 64-bit floating-point type definition.
  */
-typedef double  neuton_f64_t;
+typedef double neuton_f64_t;
 
 /**
  * @brief Generic Neuton operation status code
@@ -93,32 +92,32 @@ typedef union neuton_nn_features_statistical_mask_u
 {
     struct
     {
-        bool min      : 1; // Minimum
-        bool max      : 1; // Maximum
-        bool range    : 1; // Range
-        bool mean     : 1; // Mean
-        bool mad      : 1; // Mean Absolute Deviation
-        bool skew     : 1; // Skewness
-        bool kur      : 1; // Kurtosis
-        bool std      : 1; // Standard Deviation
-        bool rms      : 1; // Root Mean Square
-        bool mcr      : 1; // Mean-crossing Rate
-        bool zcr      : 1; // Zero-crossing Rate
-        bool tcr      : 1; // Threshold-crossing Rate
-        bool p2p_lf   : 1; // Peak-to-Peak Low Frequency
-        bool p2p_hf   : 1; // Peak-to-Peak High Frequency
-        bool absmean  : 1; // Absolute mean
-        bool amdf     : 1; // Average magnitude difference
-        bool p_scr    : 1; // Positive sigma crossing rate
-        bool n_scr    : 1; // Negative sigma crossing rate
-        bool psoz     : 1; // Percentage of signal over zero
-        bool psom     : 1; // Percentage of signal over mean
-        bool psos     : 1; // Percentage of signal over sigma
-        bool crest    : 1; // Crest factor
-        bool rds      : 1; // Root Difference Square
-        bool autocorr : 1; // Autocorrelation
-        bool hjorth_m : 1; // Hjorth Mobility
-        bool hjorth_c : 1; // Hjorth Complexity
+        bool min      : 1;  // Minimum
+        bool max      : 1;  // Maximum
+        bool range    : 1;  // Range
+        bool mean     : 1;  // Mean
+        bool mad      : 1;  // Mean Absolute Deviation
+        bool skew     : 1;  // Skewness
+        bool kur      : 1;  // Kurtosis
+        bool std      : 1;  // Standard Deviation
+        bool rms      : 1;  // Root Mean Square
+        bool mcr      : 1;  // Mean-crossing Rate
+        bool zcr      : 1;  // Zero-crossing Rate
+        bool tcr      : 1;  // Threshold-crossing Rate
+        bool p2p_lf   : 1;  // Peak-to-Peak Low Frequency
+        bool p2p_hf   : 1;  // Peak-to-Peak High Frequency
+        bool absmean  : 1;  // Absolute mean
+        bool amdf     : 1;  // Average magnitude difference
+        bool p_scr    : 1;  // Positive sigma crossing rate
+        bool n_scr    : 1;  // Negative sigma crossing rate
+        bool psoz     : 1;  // Percentage of signal over zero
+        bool psom     : 1;  // Percentage of signal over mean
+        bool psos     : 1;  // Percentage of signal over sigma
+        bool crest    : 1;  // Crest factor
+        bool rds      : 1;  // Root Difference Square
+        bool autocorr : 1;  // Autocorrelation
+        bool hjorth_m : 1;  // Hjorth Mobility
+        bool hjorth_c : 1;  // Hjorth Complexity
     } is;
     neuton_u32_t all;
 } neuton_nn_features_stat_mask_t;
@@ -128,13 +127,22 @@ typedef union neuton_nn_features_statistical_mask_u
  * 
  */
 typedef union neuton_nn_features_spectral_mask_u
-{   
+{
     struct
     {
-        bool spectrum   : 1; // Frequency spectrum @note changing this bit has no effect, enabled by default
-        bool peaks_freq : 1; // Peaks frequency indexes in spectrum
-        bool peaks_ampl : 1; // Peaks amplitude values in spectrum
-        bool ampl_spectrum : 1; // Amplitude spectrum
+        bool dom_freqs        : 1;  // Dominant frequencies indicies in spectrum
+        bool dom_freqs_ampl   : 1;  // Dominant frequencies amplitude values in spectrum
+        bool dom_freqs_thd    : 1;  // Dominant frequencies total harmonic distortion
+        bool dom_freqs_snr    : 1;  // Dominant frequencies SNR
+        bool dom_freqs_mean_d : 1;  // Dominant frequencies mean distance
+        bool fer_lowmid       : 1;  // Frequencies energy ratio Low / Mid
+        bool fer_midhigh      : 1;  // Frequencies energy ratio Mid / High
+        bool fer_lowhigh      : 1;  // Frequencies energy ratio Low / High
+        bool rms              : 1;  // Spectral RMS
+        bool crest            : 1;  // Spectral Crest
+        bool centroid         : 1;  // Spectral Centriod
+        bool spread           : 1;  // Spectral Spread
+        bool ampl_spectrum    : 1;  // Amplitude spectrum N first bins
     } is;
     neuton_u16_t all;
 } neuton_nn_features_spectral_mask_t;
@@ -170,7 +178,7 @@ typedef enum neuton_nn_err_e
     NEUTON_NN_ERR_FREE_LIMIT_EXPIRED = -128,
 
     /** Invalid argument error */
-    NEUTON_NN_ERR_INVALID_ARGUMENT   = -127,
+    NEUTON_NN_ERR_INVALID_ARGUMENT = -127,
 } neuton_nn_err_t;
 
 /**
@@ -179,13 +187,13 @@ typedef enum neuton_nn_err_e
 typedef enum neuton_nn_task_e
 {
     /** Multiclass classification task */
-    NEUTON_NN_TASK_MULT_CLASS   = 0,
+    NEUTON_NN_TASK_MULT_CLASS = 0,
 
     /** Binary classification task*/
-    NEUTON_NN_TASK_BIN_CLASS    = 1,
+    NEUTON_NN_TASK_BIN_CLASS = 1,
 
     /** Regression task */
-    NEUTON_NN_TASK_REGRESSION   = 2,
+    NEUTON_NN_TASK_REGRESSION = 2,
 
     /** Anomaly Detection task */
     NEUTON_NN_TASK_ANOMALY_DETECTION = 3
@@ -197,13 +205,13 @@ typedef enum neuton_nn_task_e
 typedef enum neuton_nn_input_scaling_e
 {
     /** Uses unified(one) scaling factor for all input features */
-    NEUTON_NN_INPUT_SCALING_UNIFIED   = 0,
+    NEUTON_NN_INPUT_SCALING_UNIFIED = 0,
 
     /** Uses unique scaling factors for each individual input feature */
-    NEUTON_NN_INPUT_SCALING_UNIQUE    = 1,
+    NEUTON_NN_INPUT_SCALING_UNIQUE = 1,
 
     /** Input features is not used by solution */
-    NEUTON_NN_INPUT_SCALING_UNDEFINED  = 2,
+    NEUTON_NN_INPUT_SCALING_UNDEFINED = 2,
 } neuton_nn_input_scaling_t;
 
 /**
@@ -213,7 +221,7 @@ typedef enum neuton_nn_input_scaling_e
 struct neuton_input_features_s;
 typedef struct neuton_input_features_s neuton_input_features_t;
 
-#ifdef   __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

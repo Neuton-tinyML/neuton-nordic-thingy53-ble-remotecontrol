@@ -108,6 +108,11 @@ neuton_u8_t neuton_nn_model_quantization(void);
 bool neuton_nn_model_activations_quantized(void);
 
 /**
+ * @brief Return true if model uses quantized outputs, otherwise false
+ */
+bool neuton_nn_model_output_quantized(void);
+
+/**
  * @brief Get solution ID in string format
  */
 const char* neuton_nn_solution_id_str(void);
