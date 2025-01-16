@@ -124,14 +124,16 @@ static const char* get_name_by_target_(uint8_t predicted_target)
 
     static const char* LABEL_VS_NAME[] = 
     {
-        [CLASS_LABEL_IDLE]           = "IDLE",
         [CLASS_LABEL_UNKNOWN]        = "UNKNOWN",
+        [CLASS_LABEL_SWIPE_DOWN]     = "SWIPE DOWN",
+        [CLASS_LABEL_SWIPE_UP]       = "SWIPE UP",
         [CLASS_LABEL_SWIPE_LEFT]     = "SWIPE LEFT",
         [CLASS_LABEL_SWIPE_RIGHT]    = "SWIPE RIGHT",
         [CLASS_LABEL_DOUBLE_SHAKE]   = "DOUBLE SHAKE",
         [CLASS_LABEL_DOUBLE_THUMB]   = "DOUBLE THUMB",
         [CLASS_LABEL_ROTATION_RIGHT] = "ROTATION RIGHT",
-        [CLASS_LABEL_ROTATION_LEFT]  = "ROTATION LEFT"
+        [CLASS_LABEL_ROTATION_LEFT]  = "ROTATION LEFT",
+        [CLASS_LABEL_IDLE]           = "IDLE",
     };
 
     static const uint8_t LABELS_CNT = sizeof(LABEL_VS_NAME) / sizeof(LABEL_VS_NAME[0]);
@@ -145,14 +147,16 @@ static const class_prediction_condition_t* get_class_condition_(uint8_t predicte
 {
     static const class_prediction_condition_t LABEL_VS_CONFIG[] = 
     {
-        [CLASS_LABEL_IDLE]           = {0, 0.0},
         [CLASS_LABEL_UNKNOWN]        = {0, 0.0},
+        [CLASS_LABEL_SWIPE_DOWN]     = {2, 0.8},
+        [CLASS_LABEL_SWIPE_UP]       = {2, 0.8},
         [CLASS_LABEL_SWIPE_LEFT]     = {2, 0.8},
         [CLASS_LABEL_SWIPE_RIGHT]    = {2, 0.8},
         [CLASS_LABEL_DOUBLE_SHAKE]   = {2, 0.7},
         [CLASS_LABEL_DOUBLE_THUMB]   = {2, 0.7},
         [CLASS_LABEL_ROTATION_RIGHT] = {2, 0.7},
         [CLASS_LABEL_ROTATION_LEFT]  = {2, 0.7},
+        [CLASS_LABEL_IDLE]           = {0, 0.0},
     };
 
     static const uint8_t LABELS_CNT = sizeof(LABEL_VS_CONFIG) / sizeof(LABEL_VS_CONFIG[0]);
