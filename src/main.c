@@ -274,7 +274,7 @@ static void neuton_prediction_handler_(const class_label_t class_label,
     {
         printk("RAW Prediction %s %d %%\r\n", class_name, (int8_t)(probability * 100.0f));
     }
-    else if (class_label > CLASS_LABEL_UNKNOWN)
+    else if ((class_label != CLASS_LABEL_UNKNOWN) && (class_label != CLASS_LABEL_IDLE))
     {
         static uint32_t last_prediction_time_ms_ = 0;
         uint32_t current_time_ms = k_uptime_get();
@@ -299,7 +299,7 @@ static void neuton_prediction_handler_(const class_label_t class_label,
 
 static void send_bt_keyboard_key_(const class_label_t class_label)
 {
-    static const ble_hid_key_t LABEL_VS_KEY_BY_MODE[2][8] = 
+    static const ble_hid_key_t LABEL_VS_KEY_BY_MODE[2][10] = 
     {
         [APP_REMOTECTRL_MODE_PRESENTATION] = 
         {
@@ -311,6 +311,8 @@ static void send_bt_keyboard_key_(const class_label_t class_label)
             [CLASS_LABEL_DOUBLE_THUMB] = BLE_HID_KEY_ESC, // Exit Fullscreen mode
             [CLASS_LABEL_ROTATION_RIGHT] = BLE_HID_KEYS_count, // No key
             [CLASS_LABEL_ROTATION_LEFT] = BLE_HID_KEYS_count, // No key
+            [CLASS_LABEL_SWIPE_UP] = BLE_HID_KEYS_count, // No key
+            [CLASS_LABEL_SWIPE_DOWN] = BLE_HID_KEYS_count, // No key
         },
         [APP_REMOTECTRL_MODE_MUSIC] = 
         {
@@ -322,6 +324,8 @@ static void send_bt_keyboard_key_(const class_label_t class_label)
             [CLASS_LABEL_DOUBLE_THUMB] = BLE_HID_KEY_MEDIA_MUTE, // Mute stream
             [CLASS_LABEL_ROTATION_RIGHT] = BLE_HID_KEY_MEDIA_VOLUME_UP, // Volume up
             [CLASS_LABEL_ROTATION_LEFT] = BLE_HID_KEY_MEDIA_VOLUME_DOWN, // Volume down
+            [CLASS_LABEL_SWIPE_UP] = BLE_HID_KEYS_count, // No key
+            [CLASS_LABEL_SWIPE_DOWN] = BLE_HID_KEYS_count, // No key
         },
     };
 

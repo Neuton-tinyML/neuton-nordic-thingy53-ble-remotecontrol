@@ -1,4 +1,4 @@
-/* 2025-01-13T13:20:24Z */
+/* 2025-01-23T15:39:16Z */
 
 /* ----------------------------------------------------------------------
 Copyright (c) 2022-2023 Neuton.AI, Inc.
@@ -58,7 +58,7 @@ applicable.
 #define NEUTON_NN_USE_UNIQ_INPUT_SCALING 0
 
 /** The maximum number of extracted features that user used for all unique input features */
-#define NEUTON_NN_EXTRACTED_FEATURES_NUM 79
+#define NEUTON_NN_EXTRACTED_FEATURES_NUM 80
 
 /** Determines the presence of a unique mask for feature extraction for each unique input feature */
 #define NEUTON_NN_USE_UNIQ_FEATURES_MASK 1
@@ -88,7 +88,7 @@ applicable.
 #define NEUTON_NN_FEATURES_EXTRACT_ABSMEAN 1
 #define NEUTON_NN_FEATURES_EXTRACT_AMDF 1
 #define NEUTON_NN_FEATURES_EXTRACT_P_SCR 1
-#define NEUTON_NN_FEATURES_EXTRACT_N_SCR 0
+#define NEUTON_NN_FEATURES_EXTRACT_N_SCR 1
 #define NEUTON_NN_FEATURES_EXTRACT_PSOZ 1
 #define NEUTON_NN_FEATURES_EXTRACT_PSOM 1
 #define NEUTON_NN_FEATURES_EXTRACT_PSOS 1
