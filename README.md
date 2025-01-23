@@ -8,7 +8,7 @@
 
 ## Overview <div id='overview'/>
 
-This project demonstrates a gesture based remote control device using [__Nordic Thingy:53__](https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-53). The development kit could be connected to the PC via Bluetooth as a HID device and using gestures the user can control media stream or slides of the presentation. Based on accelerometer and gyroscope data the Neuton.AI model could recognize __8 classes__ of gestures: Swipe Right, Swipe Left, Double Shake, Double Tap, Rotation Clockwise and Counter clockwise, No Gestures(IDLE) and Unknown Gesture.
+This project demonstrates a gesture based remote control device using [__Nordic Thingy:53__](https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-53). The development kit could be connected to the PC via Bluetooth as a HID device and using gestures the user can control media stream or slides of the presentation. Based on accelerometer and gyroscope data the Neuton.AI model could recognize __8 classes__ of gestures: Swipe Right, Swipe Left, Swipe Up, Swipe Down, Double Shake, Double Tap, Rotation Clockwise and Counter clockwise, No Gestures(IDLE) and Unknown Gesture.
 
 ## Hardware Used <div id='hw-used'/>
 
@@ -118,7 +118,9 @@ __Gestures to Keyboard Keys Mapping__
 | Double Shake                  | F5         | Media Play/Pause  |
 | Double Tap                    | ESCAPE     | Media Mute        | 
 | Swipe Right                   | Arrow Right| Media Next        | 
-| Swipe Left                    | Arrow Left | Media Previous    | 
+| Swipe Left                    | Arrow Left | Media Previous    |
+| Swipe Up                      | Not used   | Not used          | 
+| Swipe Down                    | Not used   | Not used          |  
 | Rotation Clockwise            | Not used   | Media Volume Up   | 
 | Rotation Counter clockwise    | Not used   | Media Volume Down |
 
@@ -136,6 +138,12 @@ __Swipe Right & Left__
 | -------------------------------------- | --------------------------------------------- |
 | ![Alt Text](resources/swipe_right.gif) | ![Alt Text](resources/swipe_left.gif)        |
 | Swipe Right                            |    Swipe Left                                |
+
+__Swipe Up & Down__
+|                                        |                                               |
+| -------------------------------------- | --------------------------------------------- |
+| ![Alt Text](resources/swipe_up.gif) | ![Alt Text](resources/swipe_down.gif)        |
+| Swipe Up                            |    Swipe Down                                |
 
 __Rotation Clockwise & Counter Clockwise__
 
