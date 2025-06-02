@@ -31,7 +31,7 @@ To set this project up, you will need to install the following software:
 
 1. Clone this repository: https://github.com/Neuton-tinyML/neuton-nordic-thingy53-ble-remotecontrol
 2. In the VS code, `Open folder` where you did clone the repository.
-3. Install toolchain version **v2.6.2** and SDK version **v2.6.2** in nRF Connect tab.
+3. `Manage toolchain` install toolchain version **v3.0.0**. `Manage SDK` install version **v2.6.2** in nRF Connect tab.
 
 ![sw-install-step3-img](resources/sw-install-step-3.jpg)
 
@@ -47,7 +47,9 @@ To set this project up, you will need to install the following software:
 
 ![sw-install-step6-img](resources/sw-install-step-6.jpg)
 
-7. **IMPORTANT** If your `thingy53_nrf5340_cpuapp_defconfig` file does not has `CONFIG_FPU=y` you should add this because Neuton library is compiled with `-mfloat-abi=hard` flag
+**IMPORTANT** If your `thingy53_nrf5340_cpuapp_defconfig` file does not has **`CONFIG_FPU=y`** you should add this because Neuton library is compiled with `-mfloat-abi=hard` flag
+
+![sw-install-step5-1-img](resources/sw-install-step-5-1-important.jpg)
 
 8. Now turn on your Thingy 53 dev kit and connect to your PC via debugger and USB
 
@@ -123,7 +125,7 @@ __Gestures to Keyboard Keys Mapping__
 | Rotation Counter clockwise    | Not used   | Media Volume Down |
 
 __How to Make Gestures__
-> **_NOTE:_**  The dataset for creating this model is very immature and this affects the generalization of the model on different persons, so please follow the instructions for good gesture recognition.
+> **_NOTE:_**  The dataset for creating this model is immature and this affects the generalization of the model on different persons, so please follow the instructions for good gesture recognition.
 
 To begin with, please make sure that the default (initial) position of the device is the same as following:
 
