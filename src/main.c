@@ -125,7 +125,7 @@ int main(void)
         input_data[4] = imu_data.gyro[1].raw;
         input_data[5] = imu_data.gyro[2].raw;
         /** Feed and prepare raw sensor inputs for the model inference */
-        /** If you need to collect data, uncomment the below line which will send the sensor readings to serial output (and comment out lines 133-155)*/
+        /** If you need to collect data, uncomment the below line which will send the sensor readings to serial output (and comment out lines 133-151)*/
         /** printk("%d,%d,%d,%d,%d,%d\r\n",  input_data[0], input_data[1], input_data[2], input_data[3], input_data[4], input_data[5]);*/ 
         neuton_input_features_t* p_input = neuton_nn_feed_inputs(input_data, NEUTON_INPUT_DATA_LEN);
 
