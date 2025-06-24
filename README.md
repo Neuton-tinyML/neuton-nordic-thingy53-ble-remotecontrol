@@ -70,6 +70,13 @@ Neuton.AI Nordic Thingy 53 Gestures Recognition Demo:
 Bluetooth initialized
 Advertising successfully started
 ````
+
+MacOs CLI commands examples:
+- Check connected usb devices: `ls -l /dev/cu.usb*`
+- Output to serial port. Use your actual usb-device name: `stty -f /dev/cu.usbmodem101 115200 | cat /dev/cu.usbmodem101`
+- Save serial port output to file, if necessary: `stty -f /dev/cu.usbmodem101 115200 | cat /dev/cu.usbmodem101 | tee filename.csv`
+
+
 11. Explore the project and Neuton.AI model capabilities!
 
 # How the project works <div id='how-works'/>
@@ -166,3 +173,4 @@ Predicted class: ROTATION RIGHT, with probability 93 %
 BLE HID Key 1 sent successfully
 ```
 Have fun and use this model for your future gesture control projects!
+
