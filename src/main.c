@@ -329,3 +329,4 @@ static void send_bt_keyboard_key_(const class_label_t class_label)
 
     ble_hid_send_key(LABEL_VS_KEY_BY_MODE[keyboard_ctrl_mode_][class_label]);
 }
+
