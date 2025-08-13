@@ -20,7 +20,7 @@
 #include <led/bsp_led.h>
 #include <sensor/imu/bsp_imu.h>
 
-#include "ble/hid/ble_hid.h"
+#include "ble/gatt/ble_gatt.h"
 #include "inference_postprocessing.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -192,7 +192,7 @@ static void board_support_init_(void)
     k_sem_init(&imu_data_ready_sem_, 0, 1); // Initial count 0, max count 1
 
     /** Initialize BLE HID profile */
-    ret = ble_hid_init(ble_connection_cb_);
+    ret = ble_gatt_init(ble_connection_cb_, NULL);
     if (ret != 0)
     {
         printk("Failed to initialize BLE HID service\n");
@@ -301,32 +301,9 @@ static void neuton_prediction_handler_(const class_label_t class_label,
 
 static void send_bt_keyboard_key_(const class_label_t class_label)
 {
-    static const ble_hid_key_t LABEL_VS_KEY_BY_MODE[2][8] = 
+    if (class_label != CLASS_LABEL_UNKNOWN)
     {
-        [APP_REMOTECTRL_MODE_PRESENTATION] = 
-        {
-            [CLASS_LABEL_IDLE] = BLE_HID_KEYS_count, // No key
-            [CLASS_LABEL_UNKNOWN] = BLE_HID_KEYS_count, // No key
-            [CLASS_LABEL_SWIPE_RIGHT] = BLE_HID_KEY_ARROW_RIGHT, // Next slide
-            [CLASS_LABEL_SWIPE_LEFT] = BLE_HID_KEY_ARROW_LEFT, // Previous slide
-            [CLASS_LABEL_DOUBLE_SHAKE] = BLE_HID_KEY_F5, // Fullscreen mode
-            [CLASS_LABEL_DOUBLE_THUMB] = BLE_HID_KEY_ESC, // Exit Fullscreen mode
-            [CLASS_LABEL_ROTATION_RIGHT] = BLE_HID_KEYS_count, // No key
-            [CLASS_LABEL_ROTATION_LEFT] = BLE_HID_KEYS_count, // No key
-        },
-        [APP_REMOTECTRL_MODE_MUSIC] = 
-        {
-            [CLASS_LABEL_IDLE] = BLE_HID_KEYS_count, // No key
-            [CLASS_LABEL_UNKNOWN] = BLE_HID_KEYS_count, // No key
-            [CLASS_LABEL_SWIPE_RIGHT] = BLE_HID_KEY_MEDIA_NEXT_TRACK, // Next track
-            [CLASS_LABEL_SWIPE_LEFT] = BLE_HID_KEY_MEDIA_PREV_TRACK, // Previous track
-            [CLASS_LABEL_DOUBLE_SHAKE] = BLE_HID_KEY_MEDIA_PLAY_PAUSE, // Play-pause stream
-            [CLASS_LABEL_DOUBLE_THUMB] = BLE_HID_KEY_MEDIA_MUTE, // Mute stream
-            [CLASS_LABEL_ROTATION_RIGHT] = BLE_HID_KEY_MEDIA_VOLUME_UP, // Volume up
-            [CLASS_LABEL_ROTATION_LEFT] = BLE_HID_KEY_MEDIA_VOLUME_DOWN, // Volume down
-        },
-    };
-
-    ble_hid_send_key(LABEL_VS_KEY_BY_MODE[keyboard_ctrl_mode_][class_label]);
+        ble_gatt_send_raw_data((const uint8_t*)&class_label, 1);
+    }
 }
 
