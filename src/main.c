@@ -76,7 +76,7 @@ static void led_glowing_timer_handler_(struct k_timer* timer);
 static void imu_data_ready_cb_(void);
 static void ble_connection_cb_(bool connected);
 static void button_click_handler_(bool pressed);
-static void send_bt_keyboard_key_(const class_label_t class_label);
+static void ble_send_recognized_class_(const class_label_t class_label, size_t probability_pct);
 static void neuton_prediction_handler_(const class_label_t class_label, 
                                         const float probability,
                                         const char* class_name,
@@ -85,7 +85,6 @@ static void neuton_prediction_handler_(const class_label_t class_label,
 //////////////////////////////////////////////////////////////////////////////
 
 static bool ble_connected_ = false;
-static app_remotectrl_mode_t keyboard_ctrl_mode_ = APP_REMOTECTRL_MODE_MUSIC;
 static struct k_sem imu_data_ready_sem_;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -204,19 +203,12 @@ static void board_support_init_(void)
 static void led_glowing_timer_handler_(struct k_timer* timer)
 {
     (void)timer;
-    static const led_set_func_t LED_VS_KEYBOARD_MODE[] = 
-    {
-        [APP_REMOTECTRL_MODE_PRESENTATION] = bsp_led_set_blue,
-        [APP_REMOTECTRL_MODE_MUSIC] = bsp_led_set_green,
-    };
-
     static bool rising = true;
     static float brightness = 0;
 
     if (ble_connected_)
     {
-        led_set_func_t led_set = LED_VS_KEYBOARD_MODE[keyboard_ctrl_mode_];
-        led_set(brightness);
+        bsp_led_set_green(brightness);
     }
     else
     {
@@ -243,7 +235,6 @@ static void button_click_handler_(bool pressed)
 {
     if (pressed)
     {
-        keyboard_ctrl_mode_ ^= 1;
         bsp_led_off();
     }
 }
@@ -271,12 +262,13 @@ static void neuton_prediction_handler_(const class_label_t class_label,
                                         const bool is_raw)
 {
     static const uint32_t PREDICTION_TIMEOUT_MS = 800U;
+    size_t probability_pct = (size_t)(100 * probability);
 
     if (is_raw)
     {
-        printk("RAW Prediction %s %d %%\r\n", class_name, (int8_t)(probability * 100.0f));
+        printk("RAW Prediction %s %d %%\r\n", class_name, probability_pct);
     }
-    else if (class_label > CLASS_LABEL_UNKNOWN)
+    else if (class_label != CLASS_LABEL_UNKNOWN && class_label != CLASS_LABEL_IDLE)
     {
         static uint32_t last_prediction_time_ms_ = 0;
         uint32_t current_time_ms = k_uptime_get();
@@ -290,20 +282,22 @@ static void neuton_prediction_handler_(const class_label_t class_label,
         {
             last_prediction_time_ms_ = current_time_ms;
 
-            printk("Predicted class: %s, with probability %d %%\r\n", class_name, (int)(100 * probability));
+            printk("Predicted class: %s, with probability %d %%\r\n", class_name, probability_pct);
 
-            send_bt_keyboard_key_(class_label);
+            ble_send_recognized_class_(class_label, probability_pct);
         }
     }
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-static void send_bt_keyboard_key_(const class_label_t class_label)
+static void ble_send_recognized_class_(const class_label_t class_label, size_t probability_pct)
 {
-    if (class_label != CLASS_LABEL_UNKNOWN)
-    {
-        ble_gatt_send_raw_data((const uint8_t*)&class_label, 1);
-    }
+    static char send_buff[15] = {0};
+    memset(send_buff, 0, sizeof(send_buff));
+
+    snprintf(send_buff, sizeof(send_buff), "%d,%d", (int)class_label, (int)probability_pct);
+
+    ble_gatt_send_raw_data((const uint8_t*)&send_buff, strlen(send_buff));
 }
 

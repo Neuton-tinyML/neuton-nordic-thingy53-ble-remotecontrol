@@ -151,7 +151,7 @@ static const class_prediction_condition_t* get_class_condition_(uint8_t predicte
         [CLASS_LABEL_SWIPE_RIGHT]    = {2, 0.8},
         [CLASS_LABEL_DOUBLE_SHAKE]   = {2, 0.7},
         [CLASS_LABEL_DOUBLE_THUMB]   = {2, 0.7},
-        [CLASS_LABEL_ROTATION_RIGHT] = {2, 0.7},
+        [CLASS_LABEL_ROTATION_RIGHT] = {2, 0.5},
         [CLASS_LABEL_ROTATION_LEFT]  = {2, 0.7},
     };
 

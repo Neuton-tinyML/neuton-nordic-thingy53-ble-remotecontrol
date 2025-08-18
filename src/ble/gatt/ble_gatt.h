@@ -46,7 +46,8 @@ int ble_gatt_init(ble_connection_cb_t connection_cb, ble_data_received_cb_t data
 /**
  * @brief Send Neuton out to BLE GATT profile
  * 
- * @param out      Neuton out string
+ * @param data      BLE data to send
+ * @param len       Data size in bytes
  * 
  * @return Operation status, 0 for success 
  */
