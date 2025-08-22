@@ -4,6 +4,7 @@
 - [Hardware Used](#hw-used)
 - [Setup Software Environment](#setup-sw-env)
 - [Setup Firmware Project](#setup-fw-proj)
+- [Python Demo Setup](#python-demo)
 - [How The Project Works](#how-works)
 
 ## Overview <div id='overview'/>
@@ -59,77 +60,36 @@ To set this project up, you will need to install the following software:
 
 ![sw-install-step8-img](resources/sw-install-step-8.jpg)
 
-10. After successfull device programming you can open any serial port terminal and you should see the following messages:
+# Python Demo Setup <div id='python-demo'/>
 
-````
-*** Booting nRF Connect SDK 7a22da43c1d4 ***
-Set up button at gpio@842800 pin 14
-Neuton.AI Nordic Thingy 53 Gestures Recognition Demo:
-         Version: 4.0.0
-         Solution id: 84622
-Bluetooth initialized
-Advertising successfully started
-````
+To install and run the UI demo you should have installed:
 
-MacOs CLI commands examples:
-- Check connected usb devices: `ls -l /dev/cu.usb*`
-- Output to serial port. Use your actual usb-device name: `stty -f /dev/cu.usbmodem101 115200 | cat /dev/cu.usbmodem101`
-- Save serial port output to file, if necessary: `stty -f /dev/cu.usbmodem101 115200 | cat /dev/cu.usbmodem101 | tee filename.csv`
++ Python 3 and add python3 to your system PATH
++ Pip3 (Python should install it automatically, you can check it with `pip3 --version`)
+
+After installing python3 you can execute `install_demo_win.bat` or run `pip3 install -r requirements.txt`, this script will install all necessary python dependencies for demo application.
+
+To run the UI demo application:
+- on Windows you can run `run_demo_win.bat` 
+- on Linux/MacOS use the following [manual](demo/README.md)
 
 
-11. Explore the project and Neuton.AI model capabilities!
 
 # How the project works <div id='how-works'/>
 
-Once the device is up and running, Bluetooth advertising starts as a HID device and waits for connection request from the PC.
+Once the application script is running, after approximately 10 seconds you will see **Ready to work** in the console output and the UI application will be running in a dedicated screen.
 
-You can connect devices in the same way as, for example, a regular Bluetooth keyboard.
-
-1. For Windows 10 PC you can go to `Settings -> Bluetooth & other devices -> Add Bluetooth or other device`.
-
-![bt_step_1](resources/ble_connect_1.png)
-
-2. The device should appear in `Add a device` window, choose the device for pairing.
-
-![bt_step_2](resources/device_ble_scanning.jpg)
-
-3. After Bluetooth pairing the device should appear in your `Mouse, keyboard, & pen` section
-
-![bt_step_2](resources/device_ble_connected.jpg)
-
-4. In the serial port terminal you should se the following logs messages:
-
-```
-Connected 9C:B6:D0:C0:CE:FC (public)
-Security changed: 9C:B6:D0:C0:CE:FC (public) level 2
-Input CCCD enabled
-Input attribute handle: 0
-Consumer CCCD enabled
-```
-
-After Bluetooth connection the device will change LED indication from RED LED glowing to GREEN or BLUE LEDs glowing depending on __Keyboard control mode__. 
-
-The project has two Keyboard control modes: __Presentation Control__ and __Music Control__. You can switch between control modes by pushing user button `BTN0`, for different control modes there is a different LED indication. If the device in __Presentation Control__ mode the LED glows BLUE color, if the device in __Music Control__ mode the LED glows GREEN color:
-
-__LED indication in different device states:__
-
-| No Bluetooth connection |  Presentation Control mode   |   Music Control mode    |
-| ------------------------ |---------------------------- | ----------------------- |
-| ![Alt Text](resources/device-led-no-ble-connect.gif) |![Alt Text](resources/device-led-ble-connect-presentation-mode.gif)      |![Alt Text](resources/device-led-ble-connect-music-mode.gif)  |
+After Bluetooth connection the device will change LED indication from RED LED glowing to GREEN LED glowing. 
 
 
-Depending on the control mode, recognized gestures will be mapped to different keyboard keys:
+| No Bluetooth connection |  Bluetooth connection established |
+| ------------------------ |---------------------------- |
+| ![Alt Text](resources/device-led-no-ble-connect.gif) |![Alt Text](resources/device-led-ble-connect.gif) |
 
-__Gestures to Keyboard Keys Mapping__
+After the device is connected a UI Demo window will open
+![demo_screen_1](resources/demo_1.png)
 
-|        |   Presentation Control            | Music Control     |
-| ----------------------------- | ---------- | ----------------- |
-| Double Shake                  | F5         | Media Play/Pause  |
-| Double Tap                    | ESCAPE     | Media Mute        | 
-| Swipe Right                   | Arrow Right| Media Next        | 
-| Swipe Left                    | Arrow Left | Media Previous    | 
-| Rotation Clockwise            | Not used   | Media Volume Up   | 
-| Rotation Counter clockwise    | Not used   | Media Volume Down |
+Next, follow the guidelines on how to make gestures bellow. For better recognition use your wrists more when making gestures, and not your whole hand.
 
 __How to Make Gestures__
 > **_NOTE:_**  The dataset for creating this model is immature and this affects the generalization of the model on different persons, so please follow the instructions for good gesture recognition.
@@ -138,7 +98,6 @@ To begin with, please make sure that the default (initial) position of the devic
 
 ![gestures-img-1](resources/initial_orientation.gif)
 
-Next, follow the images on how to make gestures. For better recognition use your wrists more when making gestures, and not your whole hand:
 
 __Swipe Right & Left__
 |                                        |                                               |
@@ -163,17 +122,23 @@ __Double Shake & Double Tap__
 When performing gestures with the device, in the serial port terminal, you should see the similar messages:
 
 ```
-Predicted class: DOUBLE SHAKE, with probability 96 %
-BLE HID Key 8 sent successfully
-Predicted class: SWIPE RIGHT, with probability 99 %
-BLE HID Key 32 sent successfully
-Predicted class: SWIPE LEFT, with probability 99 %
-BLE HID Key 16 sent successfully
-Predicted class: ROTATION RIGHT, with probability 93 %
-BLE HID Key 1 sent successfully
+Ready to work
+2,96
+SWIPE RIGHT, probability 96 %
+3,81
+SWIPE LEFT, probability 81 %
+2,97
+SWIPE RIGHT, probability 97 %
+7,86
+ROTATION LEFT, probability 86 %
+3,99
+SWIPE LEFT, probability 99 %
 ```
+
+The UI demo app will duplicate this with a graphical representation of recongized gestures:
+
+![gui-example-1](resources/gui_example.gif)
+
+
 Have fun and use this model for your future gesture control projects!
 
-/** neuton_nn_setup() - model initialization */
-/** neuton_nn_feed_inputs() - data windowing and preprocessing */
-/** neuton_nn_run_inference() - feature extraction and inference */

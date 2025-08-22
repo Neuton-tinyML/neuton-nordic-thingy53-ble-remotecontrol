@@ -1,0 +1,6 @@
+opencv-python
+matplotlib
+numpy
+pyserial 
+bleak==0.20.2
+Pillow
