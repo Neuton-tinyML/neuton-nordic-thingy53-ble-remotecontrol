@@ -79,6 +79,16 @@ To run the UI demo application:
 
 Once the application script is running, after approximately 10 seconds you will see **Ready to work** in the console output and the UI application will be running in a dedicated screen.
 
+In the device logs you should see similar messages:
+
+```
+Neuton.AI Nordic Thingy 53 Gestures Recognition Demo:
+         Version: 4.0.0
+         Solution id: 87008
+Bluetooth initialized
+Advertising successfully started
+```
+
 After Bluetooth connection the device will change LED indication from RED LED glowing to GREEN LED glowing. 
 
 
@@ -119,7 +129,7 @@ __Double Shake & Double Tap__
 | ![Alt Text](resources/double_shake.gif)   | ![Alt Text](resources/double_tap.gif)      |
 | Double Shake                              |    Double Tap                              |
 
-When performing gestures with the device, in the serial port terminal, you should see the similar messages:
+When performing gestures with the device, in the python terminal, you should see the similar messages:
 
 ```
 Ready to work
