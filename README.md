@@ -6,6 +6,7 @@
 - [Setup Firmware Project](#setup-fw-proj)
 - [Python Demo Setup](#python-demo)
 - [How The Project Works](#how-works)
+- [Troubleshooting](#troubleshooting)
 
 ## Overview <div id='overview'/>
 
@@ -48,9 +49,10 @@ To set this project up, you will need to install the following software:
 
 ![sw-install-step6-img](resources/sw-install-step-6.jpg)
 
-**IMPORTANT** If your `thingy53_nrf5340_cpuapp_defconfig` file does not has **`CONFIG_FPU=y`** you should add this because Neuton library is compiled with `-mfloat-abi=hard` flag
+6.1 **IMPORTANT** Enable FPU. If your `thingy53_nrf5340_cpuapp_defconfig` file does not has **`CONFIG_FPU=y`** you should add this because Neuton library is compiled with `-mfloat-abi=hard` flag
 
 ![sw-install-step5-1-img](resources/sw-install-step-5-1-important.jpg)
+![sw-install-step5-2-img](resources/sw-install-step-5-2-important.jpg)
 
 8. Now turn on your Thingy 53 dev kit and connect to your PC via debugger and USB
 
@@ -152,3 +154,16 @@ The UI demo app will duplicate this with a graphical representation of recongize
 
 Have fun and use this model for your future gesture control projects!
 
+# Troubleshooting <div id='troubleshooting'/>
+
+### 1. The maximum full path to an object file is 250 characters (see CMAKE_OBJECT_PATH_MAX) on Windows PC
+
+If you notice warnings about `CMAKE_OBJECT_PATH_MAX` during the build process it may lead to subsequent compilation errors. Unfortunately, this is a system setting and the maximum full path length for an object file is defined as 250 characters in the Zephyr build system. So the solution is to reduce the path length and if this is not possible, you might need to maybe restructure your project in order to try reducing the path length. Please refer to https://devzone.nordicsemi.com/f/nordic-q-a/101967/problems-with-long-path-lengths-cmake_object_path_max-errors article.
+
+### 2. Linkage errors: (neuton_xxxx.c.obj) uses VFP register arguments, zephyr\zephyr_pre0.elf does not
+
+As we meantioned in [Setup Firmware poject](#setup-fw-proj) section 6.1, Neuton library compiled with `-mfloat-abi=hard` and you should turn-on FPU via nRF Kconfig GUI or in `thingy53_nrf5340_cpuapp_defconfig`, please refer to 6.1.
+
+### 3. Python demo requirements installation error: bleak-wnrt
+
+On a Windows PC, the Python `bleak` module is installed with `bleak-wnrt`. But `bleak-wnrt` is compiled during installation and required `Microsoft Visual C++ 2015-2022 Redistributable` package. This dependency should be installed in prior of [requirements](demo/requirements.txt) installation on Windows PC.
