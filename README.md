@@ -11,6 +11,8 @@
 
 This project demonstrates a gesture based remote control device using [__Nordic Thingy:53__](https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-53). The development kit could be connected to the PC via Bluetooth as a HID device and using gestures the user can control media stream or slides of the presentation. Based on accelerometer and gyroscope data the Neuton.AI model could recognize __8 classes__ of gestures: Swipe Right, Swipe Left, Double Shake, Double Tap, Rotation Clockwise and Counter clockwise, No Gestures(IDLE) and Unknown Gesture. Use-case demonstration [video](https://youtu.be/kVSK7JG2L_s). Raw dataset used for model training, which you can use to train your own model, or augment it with your own data and train a more robust model is located [here](https://drive.google.com/file/d/1mbECXMTTk7QbLah3stydOKv4n8uoSr8G/view?usp=sharing).
 
+[Here](https://docs.google.com/document/d/1UMOTXBaaYdG9_hd3CwTOa2hkph7cb4i2/edit#heading=h.vobk9ee6qydz) you can find a manual on how to create similar solutions on the Neuton platform from scratch.
+
 ## Hardware Used <div id='hw-used'/>
 
 [__Nordic Thingy:53 Multi-protocol IoT prototyping platform__](https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-53)
