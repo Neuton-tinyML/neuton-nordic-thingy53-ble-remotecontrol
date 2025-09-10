@@ -6,10 +6,11 @@
 - [Setup Firmware Project](#setup-fw-proj)
 - [Python Demo Setup](#python-demo)
 - [How The Project Works](#how-works)
+- [Troubleshooting](#troubleshooting)
 
 ## Overview <div id='overview'/>
 
-This project demonstrates a gesture based remote control device using [__Nordic Thingy:53__](https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-53). The development kit could be connected to the PC via Bluetooth as a HID device and using gestures the user can control media stream or slides of the presentation. Based on accelerometer and gyroscope data the Neuton.AI model could recognize __8 classes__ of gestures: Swipe Right, Swipe Left, Double Shake, Double Tap, Rotation Clockwise and Counter clockwise, No Gestures(IDLE) and Unknown Gesture. Use-case demonstration [video](https://youtu.be/kVSK7JG2L_s). Raw dataset used for model training, which you can use to train your own model, or augment it with your own data and train a more robust model is located [here](https://drive.google.com/file/d/1mbECXMTTk7QbLah3stydOKv4n8uoSr8G/view?usp=sharing).
+This project demonstrates a gesture based remote control device using [__Nordic Thingy:53__](https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-53). The development kit could be connected to the PC via Bluetooth with custom GATT profile and using BLE characteristic sending recognized gestures. For demonstration of recognized gesture you can use this [python UI demo](#python-demo). Based on accelerometer and gyroscope data the Neuton.AI model could recognize __8 classes__ of gestures: Swipe Right, Swipe Left, Double Shake, Double Tap, Rotation Clockwise and Counter clockwise, No Gestures(IDLE) and Unknown Gesture. Raw dataset used for model training, which you can use to train your own model, or augment it with your own data and train a more robust model is located [here](https://drive.google.com/file/d/1mbECXMTTk7QbLah3stydOKv4n8uoSr8G/view?usp=sharing).
 
 [Here](https://docs.google.com/document/d/1UMOTXBaaYdG9_hd3CwTOa2hkph7cb4i2/edit#heading=h.vobk9ee6qydz) you can find a manual on how to create similar solutions on the Neuton platform from scratch.
 
@@ -50,9 +51,10 @@ To set this project up, you will need to install the following software:
 
 ![sw-install-step6-img](resources/sw-install-step-6.jpg)
 
-**IMPORTANT** If your `thingy53_nrf5340_cpuapp_defconfig` file does not has **`CONFIG_FPU=y`** you should add this because Neuton library is compiled with `-mfloat-abi=hard` flag
+6.1 **IMPORTANT** Enable FPU. If your `thingy53_nrf5340_cpuapp_defconfig` file does not has **`CONFIG_FPU=y`** you should add this because Neuton library is compiled with `-mfloat-abi=hard` flag
 
 ![sw-install-step5-1-img](resources/sw-install-step-5-1-important.jpg)
+![sw-install-step5-2-img](resources/sw-install-step-5-2-important.jpg)
 
 8. Now turn on your Thingy 53 dev kit and connect to your PC via debugger and USB
 
@@ -80,6 +82,16 @@ To run the UI demo application:
 # How the project works <div id='how-works'/>
 
 Once the application script is running, after approximately 10 seconds you will see **Ready to work** in the console output and the UI application will be running in a dedicated screen.
+
+In the device logs you should see similar messages:
+
+```
+Neuton.AI Nordic Thingy 53 Gestures Recognition Demo:
+         Version: 4.0.0
+         Solution id: 87008
+Bluetooth initialized
+Advertising successfully started
+```
 
 After Bluetooth connection the device will change LED indication from RED LED glowing to GREEN LED glowing. 
 
@@ -121,7 +133,7 @@ __Double Shake & Double Tap__
 | ![Alt Text](resources/double_shake.gif)   | ![Alt Text](resources/double_tap.gif)      |
 | Double Shake                              |    Double Tap                              |
 
-When performing gestures with the device, in the serial port terminal, you should see the similar messages:
+When performing gestures with the device, in the python terminal, you should see the similar messages:
 
 ```
 Ready to work
@@ -144,3 +156,16 @@ The UI demo app will duplicate this with a graphical representation of recongize
 
 Have fun and use this model for your future gesture control projects!
 
+# Troubleshooting <div id='troubleshooting'/>
+
+### 1. The maximum full path to an object file is 250 characters (see CMAKE_OBJECT_PATH_MAX) on Windows PC
+
+If you notice warnings about `CMAKE_OBJECT_PATH_MAX` during the build process it may lead to subsequent compilation errors. Unfortunately, this is a system setting and the maximum full path length for an object file is defined as 250 characters in the Zephyr build system. So the solution is to reduce the path length and if this is not possible, you might need to maybe restructure your project in order to try reducing the path length. Please refer to https://devzone.nordicsemi.com/f/nordic-q-a/101967/problems-with-long-path-lengths-cmake_object_path_max-errors article.
+
+### 2. Linkage errors: (neuton_xxxx.c.obj) uses VFP register arguments, zephyr\zephyr_pre0.elf does not
+
+As we meantioned in [Setup Firmware poject](#setup-fw-proj) section 6.1, Neuton library compiled with `-mfloat-abi=hard` and you should turn-on FPU via nRF Kconfig GUI or in `thingy53_nrf5340_cpuapp_defconfig`, please refer to 6.1.
+
+### 3. Python demo requirements installation error: bleak-wnrt
+
+On a Windows PC, the Python `bleak` module is installed with `bleak-wnrt`. But `bleak-wnrt` is compiled during installation and required `Microsoft Visual C++ 2015-2022 Redistributable` package. This dependency should be installed in prior of [requirements](demo/requirements.txt) installation on Windows PC.
