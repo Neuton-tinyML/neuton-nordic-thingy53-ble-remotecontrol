@@ -51,10 +51,9 @@ To set this project up, you will need to install the following software:
 
 ![sw-install-step6-img](resources/sw-install-step-6.jpg)
 
-6.1 **IMPORTANT** Enable FPU. If your `thingy53_nrf5340_cpuapp_defconfig` file does not has **`CONFIG_FPU=y`** you should add this because Neuton library is compiled with `-mfloat-abi=hard` flag
+6.1 **IMPORTANT** Enable FPU in the nRF KConfig GUI. 
 
 ![sw-install-step5-1-img](resources/sw-install-step-5-1-important.jpg)
-![sw-install-step5-2-img](resources/sw-install-step-5-2-important.jpg)
 
 8. Now turn on your Thingy 53 dev kit and connect to your PC via debugger and USB
 
