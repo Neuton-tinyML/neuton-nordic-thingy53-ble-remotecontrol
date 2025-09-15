@@ -228,49 +228,6 @@ static void board_support_init_(void)
 
 //////////////////////////////////////////////////////////////////////////////
 
-// static void led_glowing_timer_handler_(struct k_timer* timer)
-// {
-//     (void)timer;
-//     static bool rising = true;
-//     static float brightness = 0;
-
-//     static bool was_connected = false;
-
-//     if (ble_connected_)
-//     {
-//         if (!was_connected)
-//         {
-//             bsp_led_off();
-//         }
-//         bsp_led_set_green(brightness);
-//     }
-//     else
-//     {
-//         if (was_connected)
-//         {
-//             bsp_led_off();
-//         }
-//         bsp_led_set_red(brightness);
-//     }
-
-//     was_connected = ble_connected_;
-
-//     if (rising)
-//     {
-//         brightness += LED_BLINK_CHANGE_BRIGHTNESS_STEP;
-//         if (brightness >= LED_MAX_BRIGHTNESS)
-//             rising = false;
-//     } 
-//     else
-//     {
-//         brightness -= LED_BLINK_CHANGE_BRIGHTNESS_STEP;
-//         if (brightness <= 0)
-//             rising = true;
-//     }
-// }
-
-//////////////////////////////////////////////////////////////////////////////
-
 static void button_click_handler_(bool pressed)
 {
     if (pressed)
