@@ -6,6 +6,7 @@
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/settings/settings.h>
+#include <zephyr/sys/byteorder.h>
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +46,8 @@ static ble_connection_cb_t user_conn_callback_ = NULL;
 static ble_data_received_cb_t user_data_received_callback_ = NULL;
 
 static bool ccc_enabled_ = false;
+
+static struct bt_conn* current_conn_ = NULL;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -112,6 +115,9 @@ static void connected(struct bt_conn* conn, uint8_t err)
 
     ble_connected_ = true;
 
+    if (!current_conn_)
+        current_conn_ = bt_conn_ref(conn);
+
     if (user_conn_callback_)
         user_conn_callback_(ble_connected_);
 }
@@ -128,6 +134,8 @@ static void disconnected(struct bt_conn* conn, uint8_t reason)
 
     ble_connected_ = false;
     ccc_enabled_ = false;
+
+    current_conn_ = NULL;
 
     if (user_conn_callback_)
         user_conn_callback_(ble_connected_);
@@ -240,6 +248,76 @@ static ssize_t on_data_received_(struct bt_conn *conn,
     return len; // Indicate all data was consumed
 }
 
+////////////////////////////////////////////////////////////////////////////
+
+static int read_conn_rssi_(struct bt_conn *conn, int8_t* out_rssi)
+{
+   if (!conn || !out_rssi) 
+    {
+        return -1;
+    }
+
+    uint16_t handle;
+    int err = bt_conn_get_info(conn, &(struct bt_conn_info){0});
+
+    if (err) 
+    {
+        printk("Failed to get conn info (err %d)\n", err);
+        return err;
+    }
+
+    /* Get the connection handle used by the controller */
+    err = bt_hci_get_conn_handle(conn, &handle);
+    if (err) 
+    {
+        printk("Failed to get HCI handle (err %d)\n", err);
+        return err;
+    }
+
+    struct bt_hci_cp_read_rssi cp = 
+    {
+        .handle = sys_cpu_to_le16(handle),
+    };
+
+    struct net_buf *rsp_buf;
+    int ret;
+
+    struct net_buf *buf = bt_hci_cmd_alloc(K_FOREVER);
+    if (!buf) {
+        printk("No HCI buffer available\n");
+        return -1;
+    }
+
+    net_buf_add_mem(buf, &cp, sizeof(cp));
+
+    ret = bt_hci_cmd_send_sync(BT_HCI_OP_READ_RSSI, buf, &rsp_buf);
+
+    if (ret) 
+    {
+        printk("HCI RSSI request failed (err %d)\n", ret);
+
+        net_buf_unref(buf);
+
+        return ret;
+    }
+
+    struct bt_hci_rp_read_rssi *rp =
+        (struct bt_hci_rp_read_rssi *)rsp_buf->data;
+
+    if (rp->status == 0) 
+    {
+        *out_rssi = rp->rssi; /* value is already signed dBm */
+    } 
+    else
+    {
+        printk("HCI RSSI status error: 0x%02x\n", rp->status);
+    }
+
+    net_buf_unref(rsp_buf);
+
+    return rp->status;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 int ble_gatt_init(ble_connection_cb_t connection_cb, ble_data_received_cb_t data_received_cb)
@@ -282,6 +360,55 @@ int ble_gatt_send_raw_data(const uint8_t* data, size_t len)
     const struct bt_gatt_attr* attr = &neuton_gatt.attrs[2];
 
     res = bt_gatt_notify(NULL, attr, data, len);
+
+    return res;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+int ble_gatt_start_advertising(void)
+{
+    if (ble_connected_)
+    {
+        printk("Cannot start advertising while connected\n");
+        return -1;
+    }
+
+    bt_le_adv_stop();
+
+    int res = -1;
+
+    res = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+
+    return res;
+}
+
+///////////////////////////////////////////////////////////////////////
+
+int ble_gatt_get_rssi(int8_t* out_rssi)
+{
+
+    int res = -1;
+
+    if (!current_conn_)
+    {
+        printk("No current connection\n");
+        return res;
+    }
+
+    int8_t rssi = 0;
+
+    res = read_conn_rssi_(current_conn_, &rssi);
+
+    if (res == 0)
+    {
+        if (out_rssi)
+            *out_rssi = rssi;
+    }
+    else
+    {
+        printk("Failed to read RSSI (err %d)\n", res);
+    }
 
     return res;
 }
