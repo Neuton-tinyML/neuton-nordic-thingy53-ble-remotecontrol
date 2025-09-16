@@ -54,6 +54,24 @@ int ble_gatt_init(ble_connection_cb_t connection_cb, ble_data_received_cb_t data
 int ble_gatt_send_raw_data(const uint8_t* data, size_t len);
 
 
+/**
+ * @brief Start BLE advertising
+ * 
+ * @return Operation status, 0 for success 
+ */
+int ble_gatt_start_advertising(void);
+
+/**
+ * @brief Get RSSI of the current connection
+ * 
+ * @param out_rssi  Pointer to store RSSI value, can be NULL
+ * 
+ * @return Operation status, 0 for success 
+ */
+
+int ble_gatt_get_rssi(int8_t* out_rssi);
+
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
