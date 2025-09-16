@@ -56,15 +56,11 @@ To set this project up, you will need to install the following software:
 
 ![sw-install-step6-img](resources/sw-install-step-6.jpg)
 
-6.1 **IMPORTANT** Enable FPU in the nRF KConfig GUI. 
-
-![sw-install-step5-1-img](resources/sw-install-step-5-1-important.jpg)
-
-8. Now turn on your Thingy 53 dev kit and connect to your PC via debugger and USB
+7. Now turn on your Thingy 53 dev kit and connect to your PC via debugger and USB
 
 ![sw-install-step7-img](resources/connected-devkit-sw-install-step-7.jpg)
 
-9. Build & Flash the device with firmware
+8. Build & Flash the device with firmware
 
 ![sw-install-step8-img](resources/sw-install-step-8.jpg)
 
