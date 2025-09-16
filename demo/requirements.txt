@@ -4,3 +4,4 @@ numpy
 pyserial 
 bleak==0.20.2
 Pillow
+PyQt6
