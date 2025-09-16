@@ -77,7 +77,6 @@ typedef int (*led_set_func_t)(float brightness);
 //////////////////////////////////////////////////////////////////////////////
 
 static void board_support_init_(void);
-// static void led_glowing_timer_handler_(struct k_timer* timer);
 static void imu_data_ready_cb_(void);
 static void ble_connection_cb_(bool connected);
 static void button_click_handler_(bool pressed);
@@ -118,9 +117,6 @@ int main(void)
     bsp_imu_data_t imu_data = {0};
     neuton_input_t input_data[NEUTON_INPUT_DATA_LEN];
 
-    uint64_t last_rssi_print_time_ms = 0;
-
-
     for (;;)
     {
         /** Wait for the semaphore to be released by IMU data ready interrupt */
@@ -159,20 +155,6 @@ int main(void)
                                       p_probabilities[predicted_target],
                                       do_postprocessing,
                                       neuton_prediction_handler_);
-            }
-        }
-
-        if (ble_connected_)
-        {
-            uint64_t current_time_ms = k_uptime_get();
-            if (current_time_ms - last_rssi_print_time_ms >= PRINT_RSSI_INTERVAL_MS)
-            {
-                last_rssi_print_time_ms = current_time_ms;
-                int8_t rssi = 0;
-                if (ble_gatt_get_rssi(&rssi) == 0)
-                {
-                    printk("Current RSSI: %d dBm\r\n", rssi);
-                }
             }
         }
     }
