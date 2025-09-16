@@ -29,9 +29,14 @@
 #define GYRO_AXIS_NUM (3U)
 #define NEUTON_INPUT_DATA_LEN (ACCEL_AXIS_NUM + GYRO_AXIS_NUM)
 
-#define BLINK_LED_TIMER_PERIOD_MS (30)
 #define LED_MAX_BRIGHTNESS (0.2f)
 #define LED_BLINK_CHANGE_BRIGHTNESS_STEP (0.005f)
+
+#define SERVICE_THREAD_STACK_SIZE 1024
+#define SERVICE_THREAD_PRIORITY   5
+#define SERVICE_THREAD_PERIOD_MS  30
+
+#define PRINT_RSSI_INTERVAL_MS 5000
 
 LOG_MODULE_REGISTER(main);
 
@@ -72,7 +77,6 @@ typedef int (*led_set_func_t)(float brightness);
 //////////////////////////////////////////////////////////////////////////////
 
 static void board_support_init_(void);
-static void led_glowing_timer_handler_(struct k_timer* timer);
 static void imu_data_ready_cb_(void);
 static void ble_connection_cb_(bool connected);
 static void button_click_handler_(bool pressed);
@@ -82,14 +86,19 @@ static void neuton_prediction_handler_(const class_label_t class_label,
                                         const char* class_name,
                                         const bool is_raw);
 
+static void service_thread_fn_(void *p1, void *p2, void *p3);
+
 //////////////////////////////////////////////////////////////////////////////
 
 static bool ble_connected_ = false;
+static bool ble_adv_started_ = false;
 static struct k_sem imu_data_ready_sem_;
 
 //////////////////////////////////////////////////////////////////////////////
 
-K_TIMER_DEFINE(led_timer_, led_glowing_timer_handler_, NULL);
+K_THREAD_DEFINE(led_thread_id, SERVICE_THREAD_STACK_SIZE,
+                service_thread_fn_, NULL, NULL, NULL,
+                SERVICE_THREAD_PRIORITY, 0, 0);
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -165,7 +174,6 @@ static void board_support_init_(void)
     {
         printk("Failed to initialize LEDs module, error = %d\n", ret);
     }
-    k_timer_start(&led_timer_, K_MSEC(BLINK_LED_TIMER_PERIOD_MS), K_MSEC(BLINK_LED_TIMER_PERIOD_MS));
 
     /** Initialize user button */
     ret = bsp_button_init();
@@ -196,37 +204,8 @@ static void board_support_init_(void)
     {
         printk("Failed to initialize BLE HID service\n");
     }
-}
 
-//////////////////////////////////////////////////////////////////////////////
-
-static void led_glowing_timer_handler_(struct k_timer* timer)
-{
-    (void)timer;
-    static bool rising = true;
-    static float brightness = 0;
-
-    if (ble_connected_)
-    {
-        bsp_led_set_green(brightness);
-    }
-    else
-    {
-        bsp_led_set_red(brightness);
-    }
-
-    if (rising)
-    {
-        brightness += LED_BLINK_CHANGE_BRIGHTNESS_STEP;
-        if (brightness >= LED_MAX_BRIGHTNESS)
-            rising = false;
-    } 
-    else
-    {
-        brightness -= LED_BLINK_CHANGE_BRIGHTNESS_STEP;
-        if (brightness <= 0)
-            rising = true;
-    }
+    ble_adv_started_ = true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -244,6 +223,7 @@ static void button_click_handler_(bool pressed)
 static void ble_connection_cb_(bool connected)
 {
     ble_connected_ = connected;
+    ble_adv_started_ = false;
     bsp_led_off();
 }
 
@@ -301,3 +281,51 @@ static void ble_send_recognized_class_(const class_label_t class_label, size_t p
     ble_gatt_send_raw_data((const uint8_t*)&send_buff, strlen(send_buff));
 }
 
+//////////////////////////////////////////////////////////////////////////////
+
+static void service_thread_fn_(void *p1, void *p2, void *p3)
+{
+    static bool rising = true;
+    static float brightness = 0;
+
+    while (1)
+    {
+        if (ble_connected_)
+        {
+            bsp_led_set_green(brightness);
+        }
+        else
+        {
+            bsp_led_set_red(brightness);
+        }
+
+        if (rising)
+        {
+            brightness += LED_BLINK_CHANGE_BRIGHTNESS_STEP;
+            if (brightness >= LED_MAX_BRIGHTNESS)
+                rising = false;
+        }
+        else
+        {
+            brightness -= LED_BLINK_CHANGE_BRIGHTNESS_STEP;
+            if (brightness <= 0)
+                rising = true;
+        }
+
+        if (!ble_connected_ && !ble_adv_started_)
+        {
+            int err = ble_gatt_start_advertising();
+
+            if (err)
+            {
+                printk("Advertising failed to start (err %d)\n", err);
+            }
+            else
+            {
+                ble_adv_started_ = true;
+            }
+        }
+
+        k_msleep(SERVICE_THREAD_PERIOD_MS);
+    }
+}
