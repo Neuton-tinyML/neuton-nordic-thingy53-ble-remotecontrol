@@ -31,7 +31,7 @@ To set this project up, you will need to install the following software:
 
 1. Clone this repository: https://github.com/Neuton-tinyML/neuton-nordic-thingy53-ble-remotecontrol
 2. In the VS code, `Open folder` where you did clone the repository.
-3. `Manage toolchain` install toolchain version **v3.0.0**. `Manage SDK` install version **v2.6.2** in nRF Connect tab.
+3. `Manage toolchain` install toolchain version **v3.1.0**. `Manage SDK` install version **v3.1.0** in nRF Connect tab.
 
 ![sw-install-step3-img](resources/sw-install-step-3.jpg)
 
