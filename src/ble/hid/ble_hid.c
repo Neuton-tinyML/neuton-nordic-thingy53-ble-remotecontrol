@@ -322,6 +322,21 @@ static void disconnected(struct bt_conn* conn, uint8_t reason)
 
     if (user_conn_callback_)
         user_conn_callback_(ble_connected_);
+
+    // If disconnected due to authentication failure, clear all pairing info
+    if (reason == BT_HCI_ERR_AUTH_FAIL || reason == BT_HCI_ERR_PIN_OR_KEY_MISSING) {
+        printk("Authentication related disconnect, clearing pairing info\n");
+        bt_unpair(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
+    }
+
+    // Restart advertising
+    int err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+    if (err)
+    {
+        printk("Advertising failed to start (err %d)\n", err);
+        return;
+    }
+    printk("Advertising successfully started\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////
