@@ -16,6 +16,7 @@
 
 #include <neuton/neuton.h>
 #include <neuton/neuton_version.h>
+#include <neuton_generated/neuton_user_model.h>
 #include <button/bsp_button.h>
 #include <led/bsp_led.h>
 #include <sensor/imu/bsp_imu.h>
@@ -93,6 +94,7 @@ static void service_thread_fn_(void *p1, void *p2, void *p3);
 static bool ble_connected_ = false;
 static bool ble_adv_started_ = false;
 static struct k_sem imu_data_ready_sem_;
+static neuton_nn_t* p_nn_ = NULL;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -108,14 +110,15 @@ int main(void)
     board_support_init_();
 
     /** Initialize Neuton.AI library */
-    neuton_nn_setup();
+    p_nn_ = neuton_nn_user_model();
+    neuton_nn_setup(p_nn_);
 
     printk("Neuton.AI Nordic Thingy 53 Gestures Recognition Demo: \r\n");
     printk("\t Version: %d.%d.%d\r\n", NEUTON_MAJOR_VERSION, NEUTON_MINOR_VERSION, NEUTON_PATCH_VERSION);
-    printk("\t Solution id: %s\r\n", neuton_nn_solution_id_str());
+    printk("\t Solution id: %s\r\n", neuton_nn_solution_id_str(p_nn_));
 
     bsp_imu_data_t imu_data = {0};
-    neuton_input_t input_data[NEUTON_INPUT_DATA_LEN];
+    neuton_i16_t input_data[NEUTON_INPUT_DATA_LEN];
 
     for (;;)
     {
@@ -135,21 +138,23 @@ int main(void)
         /** Feed and prepare raw sensor inputs for the model inference */
         /** If you need to collect data, uncomment the below line which will send the sensor readings to serial output (and comment out lines 133-151)*/
         /** printk("%d,%d,%d,%d,%d,%d\r\n",  input_data[0], input_data[1], input_data[2], input_data[3], input_data[4], input_data[5]);*/ 
-        neuton_input_features_t* p_input = neuton_nn_feed_inputs(input_data, NEUTON_INPUT_DATA_LEN);
+        neuton_status_t res = neuton_nn_feed_inputs(p_nn_, input_data, NEUTON_INPUT_DATA_LEN);
 
         /** Check if input data window is ready for inference */
-        if (p_input)
+        if (res == NEUTON_STATUS_SUCCESS)
         {
-            neuton_u16_t predicted_target;
-            const neuton_output_t* p_probabilities;
-
             /** Run Neuton model inference */
-            neuton_i16_t targets_num = neuton_nn_run_inference(p_input, &predicted_target, &p_probabilities);
+            res = neuton_nn_run_inference(p_nn_);
 
             /** Handle Neuton inference results if the prediction was
              * successful */
-            if (targets_num > 0)
+            if (res == NEUTON_STATUS_SUCCESS)
             {
+                /** Predicted class */
+                neuton_u16_t predicted_target = p_nn_->decoded_output.classif.predicted_class;
+                /** Probabilities pointer depend on model output quantization setting */
+                const neuton_f32_t* p_probabilities = p_nn_->decoded_output.classif.probabilities.p_f32;
+
                 bool do_postprocessing = true;
                 inference_postprocess(predicted_target,
                                       p_probabilities[predicted_target],

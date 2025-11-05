@@ -1,7 +1,7 @@
-/* 2024-07-09T15:25:11Z */
+/* 2025-10-24T09:17:56.585835 */
 
 /* ----------------------------------------------------------------------
-Copyright (c) 2022-2023 Neuton.AI, Inc.
+Copyright (c) 2022-2026 Neuton.AI, Inc.
 *
 The source code and its binary form are being made available on the following terms:
 Redistribution, use, and modification are permitted provided that the following
@@ -28,29 +28,20 @@ applicable.
 * POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------- */
 
-#ifndef _NEUTON_NN_USER_TYPES_H_
-#define _NEUTON_NN_USER_TYPES_H_
+#ifndef _NEUTON_USER_MODEL_H_
+#define _NEUTON_USER_MODEL_H_
 
-#include <neuton/neuton_types.h>
+#include <neuton/nn/neuton_nn_types.h> 
 
-#ifdef   __cplusplus
-extern "C"
-{
+#ifdef __cplusplus 
+extern "C" {
 #endif
 
-typedef neuton_i16_t neuton_input_t;
-typedef neuton_f32_t neuton_output_t;
-typedef neuton_i32_t neuton_feature_t;
-typedef neuton_u16_t neuton_coeff_t;
-typedef neuton_i64_t neuton_accum_t;
-typedef neuton_i16_t neuton_weight_t;
-typedef neuton_u8_t neuton_sources_num_t;
-typedef neuton_u8_t neuton_weights_num_t;
-typedef neuton_i32_t neuton_2x_q_t;
-typedef neuton_u8_t neuton_neurons_num_t;
+neuton_nn_t* neuton_nn_user_model(void);
+neuton_u32_t neuton_nn_user_model_size(void);
 
-#ifdef   __cplusplus
+#ifdef __cplusplus 
 }
-#endif
+#endif 
 
-#endif /* _NEUTON_NN_USER_TYPES_H_ */
+#endif /* _NEUTON_USER_MODEL_H_ */
