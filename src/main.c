@@ -82,11 +82,19 @@ static void neuton_prediction_handler_(const class_label_t class_label,
                                         const char* class_name,
                                         const bool is_raw);
 
+// Work queue processing function declarations
+static void led_update_work_handler(struct k_work *work);
+static void button_work_handler(struct k_work *work);
+
 //////////////////////////////////////////////////////////////////////////////
 
 static bool ble_connected_ = false;
 static app_remotectrl_mode_t keyboard_ctrl_mode_ = APP_REMOTECTRL_MODE_MUSIC;
 static struct k_sem imu_data_ready_sem_;
+
+// Work queue items for deferring interrupt context LED operations to thread context
+static struct k_work led_update_work;
+static struct k_work button_work;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -160,6 +168,10 @@ static void board_support_init_(void)
 {
     int ret;
 
+    /** Initialize work queues */
+    k_work_init(&led_update_work, led_update_work_handler);
+    k_work_init(&button_work, button_work_handler);
+
     /** Initialize LEDs */
     ret = bsp_led_init();
     if (ret != 0)
@@ -204,6 +216,17 @@ static void board_support_init_(void)
 static void led_glowing_timer_handler_(struct k_timer* timer)
 {
     (void)timer;
+    
+    // Always submit to work queue to avoid interrupt context issues
+    k_work_submit(&led_update_work);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+// Work queue processing function implementations
+
+static void led_update_work_handler(struct k_work *work)
+{
     static const led_set_func_t LED_VS_KEYBOARD_MODE[] = 
     {
         [APP_REMOTECTRL_MODE_PRESENTATION] = bsp_led_set_blue,
@@ -237,14 +260,21 @@ static void led_glowing_timer_handler_(struct k_timer* timer)
     }
 }
 
+static void button_work_handler(struct k_work *work)
+{
+    // Handle button logic in thread context
+    keyboard_ctrl_mode_ ^= 1;
+    bsp_led_off();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 static void button_click_handler_(bool pressed)
 {
     if (pressed)
     {
-        keyboard_ctrl_mode_ ^= 1;
-        bsp_led_off();
+        // In interrupt context, only submit work to queue
+        k_work_submit(&button_work);
     }
 }
 
