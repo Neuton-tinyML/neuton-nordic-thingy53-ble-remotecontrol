@@ -22,6 +22,7 @@
 
 #include "ble/hid/ble_hid.h"
 #include "inference_postprocessing.h"
+#include "app_version.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -111,8 +112,9 @@ int main(void)
     neuton_nn_setup();
 
     printk("Neuton.AI Nordic Thingy 53 Gestures Recognition Demo: \r\n");
-    printk("\t Version: %d.%d.%d\r\n", NEUTON_MAJOR_VERSION, NEUTON_MINOR_VERSION, NEUTON_PATCH_VERSION);
-    printk("\t Solution id: %s\r\n", neuton_nn_solution_id_str());
+    printk("\t Application version: %d.%d.%d\r\n", APP_VERSION_MAJOR, APP_VERSION_MINOR, APP_VERSION_PATCH);
+    printk("\t Neuton Version: %d.%d.%d\r\n", NEUTON_MAJOR_VERSION, NEUTON_MINOR_VERSION, NEUTON_PATCH_VERSION);
+    printk("\t Neuton Solution id: %s\r\n", neuton_nn_solution_id_str());
 
     bsp_imu_data_t imu_data = {0};
     neuton_input_t input_data[NEUTON_INPUT_DATA_LEN];
