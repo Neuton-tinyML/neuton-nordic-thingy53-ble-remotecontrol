@@ -1,7 +1,7 @@
-/* 2024-07-09T15:25:11Z */
+/* 2025-10-24T09:17:56.587630 */
 
 /* ----------------------------------------------------------------------
-Copyright (c) 2022-2023 Neuton.AI, Inc.
+Copyright (c) 2022-2025 Neuton.AI, Inc.
 *
 The source code and its binary form are being made available on the following terms:
 Redistribution, use, and modification are permitted provided that the following
@@ -28,20 +28,25 @@ applicable.
 * POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------- */
 
-#ifndef _NEUTON_USER_MODEL_CONFIG_H_
-#define _NEUTON_USER_MODEL_CONFIG_H_
+#ifndef _NEUTON_NN_USER_TYPES_H_
+#define _NEUTON_NN_USER_TYPES_H_
 
-#define NEUTON_NN_MODEL_SOLUTION_ID_STR "84622"
-#define NEUTON_NN_MODEL_INFERENCES_LIMIT 0
-#define NEUTON_NN_MODEL_ANOMALY_DETECTION 0
-#define NEUTON_NN_MODEL_TASK_TYPE 0
-#define NEUTON_NN_MODEL_QTYPE 1
-#define NEUTON_NN_MODEL_FLOAT_SUPPORT 0
+#include <neuton/neuton_types.h>
 
-#define NEUTON_NN_MODEL_NEURONS_NUM 25
-#define NEUTON_NN_MODEL_WEIGHTS_NUM 217
-#define NEUTON_NN_MODEL_OUTPUTS_NUM 8
+#ifdef   __cplusplus
+extern "C"
+{
+#endif
 
-#define NEUTON_NN_OUTPUTS_LOG_SCALED 0
+typedef neuton_i16_t neuton_input_t;
+typedef neuton_i32_t neuton_feature_t;
+typedef neuton_f32_t neuton_output_t;
+typedef neuton_u16_t neuton_coeff_t;
+typedef neuton_i16_t neuton_weight_t;
+typedef neuton_coeff_t neuton_neuron_t;
 
-#endif /* _NEUTON_USER_MODEL_CONFIG_H_ */
+#ifdef   __cplusplus
+}
+#endif
+
+#endif /* _NEUTON_NN_USER_TYPES_H_ */
