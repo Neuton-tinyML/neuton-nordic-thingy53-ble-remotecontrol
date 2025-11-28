@@ -78,12 +78,13 @@ static void led_glowing_timer_handler_(struct k_timer* timer);
 static void imu_data_ready_cb_(void);
 static void ble_connection_cb_(bool connected);
 static void button_click_handler_(bool pressed);
+#ifndef CONFIG_DATA_COLLECTION_MODE
 static void send_bt_keyboard_key_(const class_label_t class_label);
 static void neuton_prediction_handler_(const class_label_t class_label, 
                                         const float probability,
                                         const char* class_name,
                                         const bool is_raw);
-
+#endif
 // Work queue processing function declarations
 static void led_update_work_handler(struct k_work *work);
 static void button_work_handler(struct k_work *work);
@@ -138,9 +139,9 @@ int main(void)
         input_data[4] = imu_data.gyro[1].raw;
         input_data[5] = imu_data.gyro[2].raw;
         /** Feed and prepare raw sensor inputs for the model inference */
-        /** If you need to collect data, uncomment the below line which will send the sensor readings to serial output (and comment out lines 133-151)*/
-        /** printk("%d,%d,%d,%d,%d,%d\r\n",  input_data[0], input_data[1], input_data[2], input_data[3], input_data[4], input_data[5]);*/ 
-        
+#if CONFIG_DATA_COLLECTION_MODE
+        printk("%d,%d,%d,%d,%d,%d\r\n",  input_data[0], input_data[1], input_data[2], input_data[3], input_data[4], input_data[5]);
+#else        
         neuton_status_t res = neuton_nn_feed_inputs(p_nn_, input_data, NEUTON_INPUT_DATA_LEN);
 
         /** Check if input data window is ready for inference */
@@ -165,6 +166,7 @@ int main(void)
                                       neuton_prediction_handler_);
             }
         }
+#endif // CONFIG_DATA_COLLECTION_MODE
     }
 
     return 0;
@@ -302,7 +304,7 @@ static void imu_data_ready_cb_(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-
+#ifndef CONFIG_DATA_COLLECTION_MODE
 static void neuton_prediction_handler_(const class_label_t class_label, 
                                         const float probability,
                                         const char* class_name,
@@ -334,7 +336,6 @@ static void neuton_prediction_handler_(const class_label_t class_label,
         }
     }
 }
-
 //////////////////////////////////////////////////////////////////////////////
 
 static void send_bt_keyboard_key_(const class_label_t class_label)
@@ -368,3 +369,4 @@ static void send_bt_keyboard_key_(const class_label_t class_label)
     ble_hid_send_key(LABEL_VS_KEY_BY_MODE[keyboard_ctrl_mode_][class_label]);
 }
 
+#endif // CONFIG_DATA_COLLECTION_MODE
