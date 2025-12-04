@@ -79,6 +79,29 @@ MacOs CLI commands examples:
 
 11. Explore the project and Neuton.AI model capabilities!
 
+### Data collection firmware build
+
+It is possible to create a special build that will output the raw data of the acceleromater and gyro sensors in the serial port.
+This way it's possible to capture data for training new models, to test and implement new use cases.
+The output of the sensors will integers of 16 bits, separated by a comma, in the following order
+
+```
+<acc_x>,<acc_y>,<acc_z>,<gyro_x>,<gyro_y>,<giro_z>
+```
+*(Please note column headers are not included)*
+
+The output rate will be the configured sampling frequency, default value being 100Hz.
+
+To build this version, the following option must be enabled in the `prj.conf` file
+
+```
+CONFIG_DATA_COLLECTION_MODE=y
+```
+
+The project must be build and flashed again as described in the step **(9)**.
+
+No inference will be performed in this mode, it's just intended to simplify the capture of new datasets
+
 # How the project works <div id='how-works'/>
 
 Once the device is up and running, Bluetooth advertising starts as a HID device and waits for connection request from the PC.
