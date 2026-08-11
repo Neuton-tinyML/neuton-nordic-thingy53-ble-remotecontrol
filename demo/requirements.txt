@@ -1,7 +1,9 @@
 opencv-python
 matplotlib
 numpy
-pyserial 
+pyserial
 bleak
 Pillow
 PyQt6
+spotipy
+websockets

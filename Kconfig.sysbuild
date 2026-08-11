@@ -6,8 +6,14 @@
 
 source "share/sysbuild/Kconfig"
 
+# The Thingy:53 (nRF5340) runs the BLE controller on a separate network core,
+# built as the ipc_radio image. Gated on the board: the nRF54L15 is single-core.
+if BOARD_THINGY53
+
 config NRF_DEFAULT_IPC_RADIO
 	default y
 
 config NETCORE_IPC_RADIO_BT_HCI_IPC
 	default y
+
+endif # BOARD_THINGY53

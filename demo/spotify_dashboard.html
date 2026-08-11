@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<!--
+  Gesture-controlled Spotify remote — browser dashboard.
+
+  A pure renderer: it decides nothing and never sends commands. Every value came
+  from spotify_bridge.py over the WebSocket, so if the display looks wrong the
+  bug is in the bridge. The one exception is progress-bar interpolation between
+  polls (see tickProgress).
+
+  Open the file directly — no web server needed. It retries the connection every
+  2 s, so start order does not matter. Icons load from ./assets/, so keep this
+  file in demo/.
+
+  When editing: hard-refresh with Ctrl+F5. Browsers cache local files hard.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thingy:53 Spotify Remote</title>
+<style>
+  /* --green for healthy/playback, --neuton (from the demo assets) for gesture
+     activity, --red for problems. */
+  :root {
+    --bg: #0b0d10;
+    --panel: #15181d;
+    --panel-2: #1b1f26;   /* Insets nested inside a panel. */
+    --line: #262b33;
+    --text: #f2f4f7;
+    --muted: #8b93a1;     /* Secondary text and inactive status. */
+    --green: #1db954;
+    --neuton: #cedd50;
+    --red: #e2564b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 32px 24px;
+    background: radial-gradient(1200px 600px at 20% -10%, #1a2430 0%, var(--bg) 55%);
+    color: var(--text);
+    font: 15px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  /* Three pills summarize the chain: browser->bridge, bridge->device,
+     bridge->Spotify. The colour tells you which link broke. */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: .2px;
+  }
+
+  h1 span { color: var(--muted); font-weight: 400; }
+
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 12.5px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Status light. No modifier = unknown. */
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex: none;
+  }
+
+  .dot.ok   { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot.warn { background: var(--neuton); }
+  .dot.bad  { background: var(--red); }
+
+  /* Playback detail left, gesture readout right; one column when narrow. */
+  .grid {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .card h2 {
+    margin: 0 0 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---- Now playing ---- */
+
+  .np { display: flex; gap: 18px; align-items: center; }
+
+  #art {
+    width: 116px; height: 116px;
+    flex: none;
+    border-radius: 10px;
+    object-fit: cover;        /* Crop, do not distort, non-square art. */
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+  }
+
+  /* visibility, not display: keeps the row from reflowing without artwork. */
+  #art.empty { visibility: hidden; }
+
+  .np-meta { min-width: 0; }   /* Allows the ellipsis on #track to work. */
+
+  #track {
+    font-size: 21px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    /* Truncate long titles rather than reflowing the layout. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #artists { color: var(--text); opacity: .8; }
+  #album   { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+  .bar {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--panel-2);
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+
+  .bar > i {
+    display: block;
+    height: 100%;
+    background: var(--green);
+    width: 0;
+    /* Linear and matched to the 250 ms tick, so it advances steadily. */
+    transition: width .25s linear;
+  }
+
+  .times {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    /* Tabular figures stop the timer jittering. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progress-block { margin-top: 20px; }
+
+  /* ---- Gesture readout ---- */
+
+  .gesture { text-align: center; }
+
+  #g-icon {
+    width: 92px; height: 92px;
+    object-fit: contain;
+    margin: 2px auto 10px;
+    display: block;
+    opacity: 0;   /* Until the first gesture arrives. */
+    transition: opacity .2s;
+  }
+
+  #g-icon.show { opacity: 1; }
+
+  #g-name {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: .4px;
+  }
+
+  #g-prob { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+  #g-action {
+    margin-top: 14px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    font-weight: 600;
+    color: var(--neuton);
+    min-height: 40px;   /* Stops the card jumping. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Highlight on change, so a repeated action is still visible. */
+  .flash { animation: flash .5s ease-out; }
+
+  @keyframes flash {
+    from { background: rgba(206,221,80,.22); border-color: var(--neuton); }
+    to   { background: var(--panel-2); border-color: var(--line); }
+  }
+
+  /* ---- Volume / mute tiles ---------------------------------------------- */
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .stat {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .stat .k {
+    font-size: 10.5px;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .stat .v { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .vol-bar { margin-top: 8px; }
+
+  /* ---- Activity log ---- */
+
+  #log {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    max-height: 210px;   /* Scrolls internally. */
+    overflow-y: auto;
+  }
+
+  #log li {
+    display: flex;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  #log li:last-child { border-bottom: 0; }
+
+  #log time { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
+
+  /* Stack of transient error banners, newest first. Collapses when empty. */
+  #banners {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  #banners:empty { display: none; margin-bottom: 0; }
+
+  /* Shows state.error verbatim. Auto-expires; see BANNER_MS. */
+  .banner {
+    padding: 12px 16px;
+    border-radius: 11px;
+    background: rgba(226,86,75,.12);
+    border: 1px solid rgba(226,86,75,.45);
+    color: #ffb9b2;
+    font-size: 13.5px;
+    animation: banner-in .18s ease-out;
+  }
+
+  @keyframes banner-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  footer {
+    margin-top: 22px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ws-* = page->bridge, ble-* = bridge->device, dev-* = Spotify device -->
+  <header>
+    <h1>Thingy:53 <span>/ gesture Spotify remote</span></h1>
+    <div class="pills">
+      <span class="pill"><i class="dot" id="ws-dot"></i><span id="ws-text">connecting…</span></span>
+      <span class="pill"><i class="dot" id="ble-dot"></i>BLE <span id="ble-text">—</span></span>
+      <span class="pill"><i class="dot" id="dev-dot"></i><span id="dev-text">no device</span></span>
+    </div>
+  </header>
+
+  <div id="banners"></div>
+
+  <div class="grid">
+
+    <div>
+      <div class="card">
+        <h2>Now playing</h2>
+        <div class="np">
+          <img id="art" class="empty" alt="">
+          <div class="np-meta">
+            <div id="track">Nothing playing</div>
+            <div id="artists"></div>
+            <div id="album"></div>
+          </div>
+        </div>
+
+        <div class="progress-block">
+          <div class="bar"><i id="progress"></i></div>
+          <div class="times"><span id="t-pos">0:00</span><span id="t-dur">0:00</span></div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="k">Volume</div>
+            <div class="v" id="vol">—</div>
+            <div class="bar vol-bar"><i id="vol-bar"></i></div>
+          </div>
+          <div class="stat">
+            <!-- Double shake mutes: really "volume 0" with the old level kept. -->
+            <div class="k">Muted</div>
+            <div class="v" id="muted">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Most useful panel when a gesture is recognized but nothing happens. -->
+      <div class="card" style="margin-top:18px">
+        <h2>Activity</h2>
+        <ul id="log"><li><time>—</time><span>Waiting for the bridge…</span></li></ul>
+      </div>
+    </div>
+
+    <div class="card gesture">
+      <h2>Last gesture</h2>
+      <img id="g-icon" alt="">
+      <div id="g-name">—</div>
+      <div id="g-prob"></div>
+      <div id="g-action">idle</div>
+    </div>
+
+  </div>
+
+  <footer>Rendering state from <code>spotify_bridge.py</code> on ws://localhost:8765</footer>
+</div>
+
+<script>
+"use strict";
+
+// Flow: connect() opens the socket -> each message replaces `state` ->
+// render() redraws everything -> tickProgress() moves the bar between messages.
+
+// Must match WS_HOST/WS_PORT in spotify_bridge.py.
+const WS_URL = "ws://localhost:8765";
+const RECONNECT_MS = 2000;
+
+// How long an error banner stays up after the bridge last sent it, and how many
+// are shown at once. The timer restarts each time the same text arrives again,
+// which is what keeps a persistent problem (a BLE fault, which the bridge keeps
+// re-sending) on screen while a one-off Spotify refusal fades.
+const BANNER_MS = 5000;
+const BANNER_MAX = 3;
+
+// Keys must match gestures_string_names in spotify_bridge.py exactly.
+const GESTURE_ICONS = {
+  "SWIPE RIGHT":    "assets/SwipeRight.png",
+  "SWIPE LEFT":     "assets/SwipeLeft.png",
+  "DOUBLE SHAKE":   "assets/DoubleShake.png",
+  "DOUBLE THUMB":   "assets/DoubleThumb.png",
+  "ROTATION RIGHT": "assets/RotationRight.png",
+  "ROTATION LEFT":  "assets/RotationLeft.png",
+  // Filtered out by the bridge; here for completeness.
+  "NO MOVEMENTS":   "assets/Idle.png",
+  "UNKNOWN GESTURE":"assets/Unknown.png",
+};
+
+const el = (id) => document.getElementById(id);
+
+let state = null;          // Latest snapshot from the bridge.
+let recvAt = 0;            // When it arrived, for progress interpolation.
+let lastGestureTs = null;  // Distinguishes a NEW gesture from a repeated snapshot.
+let lastAction = null;     // So the flash only fires on a real change.
+let banners = [];          // [{text, at}], oldest first; rendered newest first.
+
+// ---------- helpers ----------
+
+function fmtTime(ms) {
+  if (!ms || ms < 0) ms = 0;
+  const total = Math.floor(ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return m + ":" + String(s).padStart(2, "0");
+}
+
+function setDot(dot, cls) {
+  dot.className = "dot" + (cls ? " " + cls : "");
+}
+
+function log(text) {
+  const list = el("log");
+  if (list.dataset.seeded !== "1") {
+    list.innerHTML = "";
+    list.dataset.seeded = "1";
+  }
+  const li = document.createElement("li");
+  const t = document.createElement("time");
+  t.textContent = new Date().toLocaleTimeString();
+  const s = document.createElement("span");
+  // textContent, not innerHTML: track/artist names must not be parsed as markup.
+  s.textContent = text;
+  li.append(t, s);
+  list.prepend(li);   // Newest first.
+  // Cap it so a long session cannot grow the DOM without bound.
+  while (list.children.length > 40) list.lastElementChild.remove();
+}
+
+// ---------- rendering ----------
+
+// Record an error for display, or restart the timer on one already showing.
+// Matching by text matters: the bridge re-sends an unresolved error on every
+// poll, and that must refresh the existing banner rather than stack duplicates.
+function noteError(text) {
+  if (!text) return;
+  const existing = banners.find(b => b.text === text);
+  if (existing) {
+    existing.at = performance.now();
+    return;
+  }
+  banners.push({ text, at: performance.now() });
+  if (banners.length > BANNER_MAX) banners = banners.slice(-BANNER_MAX);
+  renderBanners();
+}
+
+// Drop expired banners and redraw. Rebuilt only when the visible set actually
+// changes, so a refreshed timer does not restart the entry animation.
+function renderBanners() {
+  const now = performance.now();
+  banners = banners.filter(b => now - b.at < BANNER_MS);
+
+  const box = el("banners");
+  const shown = [...banners].reverse();   // Newest at the top.
+  const key = shown.map(b => b.text).join(" ");
+  if (key === box.dataset.key) return;
+  box.dataset.key = key;
+
+  box.innerHTML = "";
+  for (const b of shown) {
+    const div = document.createElement("div");
+    div.className = "banner";
+    div.textContent = b.text;   // Never innerHTML: this text includes API output.
+    box.appendChild(div);
+  }
+}
+
+// Idempotent full redraw: no partial-update state to get wrong.
+function render() {
+  if (!state) return;
+  const sp = state.spotify || {};
+
+  const ble = state.ble || "—";
+  el("ble-text").textContent = ble;
+  setDot(el("ble-dot"), ble === "LISTENING" ? "ok" : ble === "CONNECTING" ? "warn" : "bad");
+
+  // Red here is the usual reason commands do nothing: the Web API needs an
+  // already-active session to target.
+  if (sp.active && sp.device) {
+    el("dev-text").textContent = sp.device;
+    setDot(el("dev-dot"), "ok");
+  } else {
+    el("dev-text").textContent = "no active device";
+    setDot(el("dev-dot"), "bad");
+  }
+
+  // The bridge already merged and prioritised BLE vs Spotify errors.
+  noteError(state.error);
+
+  el("track").textContent = sp.track || "Nothing playing";
+  el("artists").textContent = sp.artists || "";
+  el("album").textContent = sp.album || "";
+
+  // Only assign src when it changed, or the art re-fetches and flickers.
+  const art = el("art");
+  if (sp.art) {
+    if (art.getAttribute("src") !== sp.art) art.src = sp.art;
+    art.classList.remove("empty");
+  } else {
+    art.classList.add("empty");
+  }
+
+  // null/undefined means the device does not report volume — not the same as
+  // zero. volLocked means Spotify will refuse regardless of account plan, so
+  // say so up front rather than after a failed gesture.
+  const volLocked = sp.supports_volume === false || sp.is_restricted;
+  el("vol").textContent = (sp.volume === null || sp.volume === undefined)
+    ? "n/a" : sp.volume + "%" + (volLocked ? " (locked)" : "");
+  el("vol").style.color = volLocked ? "var(--muted)" : "";
+  el("vol-bar").style.width = (sp.volume || 0) + "%";
+
+  // Mute is volume 0, so it carries the same restriction — reuse volLocked.
+  el("muted").textContent = (sp.muted ? "Yes" : "No")
+    + (volLocked ? " (locked)" : "");
+  el("muted").style.color = volLocked
+    ? "var(--muted)" : (sp.muted ? "var(--neuton)" : "");
+
+  // `ts` distinguishes a new recognition from the same one echoed by a poll;
+  // without it every poll would add a duplicate log line.
+  const g = state.gesture;
+  if (g) {
+    el("g-name").textContent = g.name;
+    el("g-prob").textContent = g.probability + "% confidence";
+    const icon = el("g-icon");
+    const src = GESTURE_ICONS[g.name];
+    if (src) {
+      if (!icon.getAttribute("src") || !icon.getAttribute("src").endsWith(src)) {
+        icon.src = src;
+      }
+      icon.classList.add("show");
+    }
+    if (g.ts !== lastGestureTs) {
+      lastGestureTs = g.ts;
+      log(g.name + " (" + g.probability + "%)" +
+          (state.action ? " -> " + state.action : ""));
+    }
+  }
+
+  if (state.action) {
+    el("g-action").textContent = state.action;
+    if (state.action !== lastAction) {
+      lastAction = state.action;
+      // Remove-reflow-add replays the animation; reading offsetWidth forces
+      // the removal to apply before the class goes back on.
+      el("g-action").classList.remove("flash");
+      void el("g-action").offsetWidth;
+      el("g-action").classList.add("flash");
+    }
+  }
+
+  tickProgress();
+}
+
+// The one piece of local computation: progress_ms arrived at recvAt, so while
+// playing the true position is that plus elapsed time. Otherwise the bar would
+// step every 2 s. Never sent back — the next poll overwrites this estimate.
+function tickProgress() {
+  if (!state) return;
+  const sp = state.spotify || {};
+  const dur = sp.duration_ms || 0;
+  if (!dur) {
+    // Nothing playing, or a stream of unknown length: avoid dividing by zero.
+    el("progress").style.width = "0%";
+    el("t-pos").textContent = "0:00";
+    el("t-dur").textContent = "0:00";
+    return;
+  }
+  let pos = sp.progress_ms || 0;
+  // Only extrapolate while playing; paused values are already correct.
+  if (sp.is_playing) pos += performance.now() - recvAt;
+  // A track can end between polls; the bar must not overrun.
+  pos = Math.min(pos, dur);
+  el("progress").style.width = (100 * pos / dur) + "%";
+  el("t-pos").textContent = fmtTime(pos);
+  el("t-dur").textContent = fmtTime(dur);
+}
+
+// Smooth enough, far cheaper than per-frame, and matches the CSS transition.
+// Also expires banners, which must happen without waiting for a message.
+setInterval(() => {
+  tickProgress();
+  renderBanners();
+}, 250);
+
+// ---------- websocket ----------
+
+// Retries forever, so the dashboard can be opened before the bridge starts and
+// recovers on its own when the bridge restarts.
+function connect() {
+  const ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    setDot(el("ws-dot"), "ok");
+    el("ws-text").textContent = "bridge connected";
+    log("Connected to bridge");
+  };
+
+  ws.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      // Ignore non-state messages, so new bridge message types cannot break this.
+      if (msg.type !== "state") return;
+      state = msg;
+      recvAt = performance.now();
+      render();
+    } catch (e) {
+      // Keep the connection alive rather than tearing down over one bad frame.
+      console.error("Bad message from bridge", e);
+    }
+  };
+
+  ws.onclose = () => {
+    setDot(el("ws-dot"), "bad");
+    el("ws-text").textContent = "bridge offline — retrying";
+    setTimeout(connect, RECONNECT_MS);
+  };
+
+  // Funnel into onclose for a single retry path; otherwise a failed attempt
+  // fires both handlers and schedules two.
+  ws.onerror = () => ws.close();
+}
+
+connect();
+</script>
+</body>
+</html>

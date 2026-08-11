@@ -1,3 +1,6 @@
+# python
+__pycache__/
+
 # editors
 *.swp
 *~
@@ -6,3 +9,6 @@
 /build*/
 /.vscode/
 **.DS_Store
+# spotify credentials and oauth token cache (.env.example is committed)
+demo/.env
+demo/.spotify_token_cache

@@ -12,7 +12,11 @@
 #include <stdio.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#if defined(CONFIG_USB_DEVICE_STACK)
+/* Thingy:53 only — the nRF54L15 has no USB peripheral. */
 #include <zephyr/usb/usb_device.h>
+#endif
 
 #include <nrf_edgeai/nrf_edgeai.h>
 #include <nrf_edgeai_generated/nrf_edgeai_user_model.h>
@@ -39,6 +43,11 @@
 #define SERVICE_THREAD_PERIOD_MS  30
 
 #define PRINT_RSSI_INTERVAL_MS 5000
+
+/** Set to 1 to stream raw IMU samples and unfiltered model predictions to the
+ * console. For bringing the application up on a new board; leave at 0 normally.
+ */
+#define APP_DEBUG_IMU_STREAM 0
 
 LOG_MODULE_REGISTER(main);
 
@@ -143,6 +152,20 @@ int main(void)
         input_data[3] = imu_data.gyro[0].raw;
         input_data[4] = imu_data.gyro[1].raw;
         input_data[5] = imu_data.gyro[2].raw;
+
+#if APP_DEBUG_IMU_STREAM
+        /** Board bring-up aid: print a sample twice per second. At rest one
+         * accel axis should read close to +/-9800 (milli-m/s^2) and the others
+         * near zero — that identifies the sensor's orientation on this board.
+         */
+        static uint32_t sample_count_ = 0;
+        if ((sample_count_++ % 50) == 0)
+        {
+            printk("IMU a=[%6d %6d %6d] g=[%6d %6d %6d]\r\n",
+                   input_data[0], input_data[1], input_data[2],
+                   input_data[3], input_data[4], input_data[5]);
+        }
+#endif
         /** Feed and prepare raw sensor inputs for the model inference */
         res = nrf_edgeai_feed_inputs(p_model_, input_data, NRF_EDGEAI_INPUT_DATA_LEN);
 
@@ -161,7 +184,12 @@ int main(void)
                 /** Probabilities pointer depend on model output quantization setting */
                 const flt32_t* p_probabilities = p_model_->decoded_output.classif.probabilities.p_f32;
 
-                bool do_postprocessing = true;
+                /** With the debug stream on, skip postprocessing so every
+                 * inference is reported as "RAW Prediction" — postprocessing
+                 * otherwise hides classes that fail the repeat/probability
+                 * thresholds, which is exactly what needs inspecting during
+                 * board bring-up. */
+                bool do_postprocessing = !APP_DEBUG_IMU_STREAM;
                 inference_postprocess(predicted_target,
                                       p_probabilities[predicted_target],
                                       do_postprocessing,

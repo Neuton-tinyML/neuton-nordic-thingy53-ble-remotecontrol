@@ -1,0 +1,19 @@
+/*
+ * Copyright (c) 2025 Nordic Semiconductor ASA
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * nRF54L15 TAG devicetree additions.
+ *
+ * The BMI270 IMU on spi22 is already enabled by the board devicetree, so the
+ * only thing needed here is a set of generic LED aliases. The board names its
+ * RGB channels led1_red/green/blue; bsp_led looks up led-red/green/blue so the
+ * BSP does not have to know board-specific node labels.
+ */
+
+/ {
+	aliases {
+		led-red = &led1_red;
+		led-green = &led1_green;
+		led-blue = &led1_blue;
+	};
+};
